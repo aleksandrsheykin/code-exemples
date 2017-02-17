@@ -1,0 +1,12 @@
+.modal_container {
+	position: absolute; 
+}
+
+.modal_container img {
+	z-index: 1000;
+	max-width:800px;
+}
+
+.big_img_cont {
+	cursor: pointer;
+}

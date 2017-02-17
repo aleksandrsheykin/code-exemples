@@ -1,0 +1,17 @@
+/*******************************************************
+				IntserDiscountUser css
+********************************************************/
+
+.intserdiscountheader {
+	z-index: 10; 
+	display: none; 
+	background-color: #555; 
+	width: 220px; 
+	float: right;
+}
+
+.intserdiscounttable {
+	color: #FFFFFF;
+	width: 100%;
+	border-spacing: 0px 0px;
+}

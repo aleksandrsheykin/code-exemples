@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Покупательский интерфейс{% endblock %}
+
+{% block content %}
+
+<div class="row">
+	<div class="col-md-4">
+		<div class="row">
+			<div class="col-md-12 text-center" id="big_img_container">
+				<div style="margin-top: 110px;">
+					<img src="{% static "images/loader_64.gif" %}" alt="{{ products.fullname }}" class="img-thumbnail" id="big_img">
+					</br>Изображение загружается...
+				</div>
+			</div>
+		</div>
+		<div class="row" style="padding-top: 10px;" id="small_img_container">
+			
+		</div>
+	</div>
+	<div class="col-md-8">
+		<h1>{{ products.fullname }}</h1>
+		{% if prices.0.price %}<h3>{{prices.0.price|floatformat:2|default:""}} руб.</h3> {% endif %}
+		<h4>
+			{% if prices.0.quantity %}
+				<span class="glyphicon glyphicon-ok text-success"></span> В наличии: {{prices.0.quantity}} шт. 
+			{% else %} 
+				<span class="glyphicon glyphicon-remove text-danger"></span> Нет в наличии 
+			{% endif %}
+		</h4>
+		{% if products.authors %}<p>Автор: {{ products.authors }}</p>{% endif %}
+		{% if products.tema %}<p>Тема: {{ products.tema }}</p>{% endif %}
+		{% if products.serya %}<p>Серия: {{ products.serya }}</p>{% endif %}		
+		{% if products.code %}<p>Код: {{ products.code }}</p>{% endif %}
+		{% if products.article %}<p>Артикул: {{ products.article }}</p>{% endif %}
+		{% if products.isbn %}<p>ISBN: {{ products.isbn }}</p>{% endif %}
+		{% if products.prim %}
+			<div class="alert alert-info">{{ products.prim }}</div>
+		{% endif %}
+
+		<button type="button" class="btn btn-success" onClick="ShowQtyShops(this);">Проверить наличие в других магазинах</button>
+		<div class="panel panel-success" id="panel_qty_shops" style="display: none;">
+			<div class="panel-heading">
+				Наличие товара в других магазинах
+			</div>
+			<div class="panel-body" id="Qty_Shop_cont">
+				<div class="text-center">
+					<img src="{% static "images/loader_32.gif" %}" alt="{{ products.fullname }}" class="img-thumbnail">
+					Поиск остатков в магазинах сети...
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal_container" id="modal_container" style="display: none;">
+	<img src="" id="modal_img">
+</div>
+	
+<script>
+	function ShowQtyShops(e) {	//получаем остатки в др. магазинах
+		e.style.display = "none";
+		$("#panel_qty_shops").show();
+		$.ajax({
+			type: "GET",
+			url: "http://192.168.0.252/testLocalUT_IS/hs/GetPict/{{products.guid}}/r/jsoncallback=?",
+			dataType: "jsonp",
+			timeout: 60000,
+			success: function(data) {
+				SetQuantityInShops(data);
+			},
+			error: function() {
+				$("#Qty_Shop_cont").empty();
+				$("#Qty_Shop_cont").append('Не удалось получить остатки');
+			}
+		});		
+	}
+	
+	function SetQuantityInShops(data) {	//расставляет остатки по магазинам	
+		$("#Qty_Shop_cont").empty();
+		if (data.countR == 0) {
+			$("#Qty_Shop_cont").append('Этого товара нет в других магазинах');	
+			return;
+		}
+		var str = '<ul>';
+		for (var i=0; i<data.countR; i++) {
+			str += '<li>'+data.ListStore[i].Store+' <span class="badge pull-center">'+data.ListStore[i].Remainder+' шт.</span></li>';
+		}
+		str += '</ul>';
+		$("#Qty_Shop_cont").append(str);
+	}
+
+	function SetNotImage() {	//ставит "Изображение отсутствует"
+		$("#big_img_container").empty();
+		$("#big_img_container").append('<img src="{% static "images/not_image.jpg" %}" alt="{{ products.fullname }}" class="img-thumbnail" id="big_img">');
+	}	
+	
+	function SetImages(jResp) { 	//расставляет полученные картинки
+		if (jResp.countR == 0) {
+			SetNotImage();
+			return;
+		}
+		$("#big_img_container").empty();
+		$("#big_img_container").append('<img src="data:image/jpg;base64,'+jResp.Picture1+'" alt="{{ products.fullname }}" class="img-thumbnail big_img_cont" id="big_img">');
+		$("#small_img_container").empty();
+		var key = '';
+		var str = '';
+		for (var i=1; i<=jResp.countR; i++) {
+			key = 'Picture'+i;
+			str = '<div class="col-xs-6 col-md-3">'
+			str += '<a href="javascript:void(0)" class="thumbnail">';
+			str += '<img src="data:image/jpg;base64,'+jResp[key]+'" class="small_img">';
+			str += '</a></div>';
+			$("#small_img_container").append(str);		
+		}
+	}	
+	
+	$(window).load(function () {
+		$.ajax({
+			type: "GET",
+			url: "http://192.168.0.252/testLocalUT_IS/hs/GetPict/{{products.guid}}/p/jsoncallback=?",
+			dataType: "jsonp",
+			timeout: 60000,
+			success: function(data) {
+				SetImages(data);			//получили ответ, размещаем изображения на странице
+				
+				$(".small_img").click(function() {	//обработчик кликов по миниатюрам
+					$("#big_img").attr('src', $(this).prop('src'));
+				});
+				
+				var flvisibility = false;
+				$("#big_img").bind('click', function(){	//навели курсор или кликнули по картинке
+					$('#modal_img').attr('src', $('#big_img').prop('src'));
+					$('#modal_container').show();
+						//выровним по центру
+					$('#modal_container').offset({top: ($(window).height()- $('#modal_img').height())/2, left: ($(window).width()- $('#modal_img').width())/2});
+					flvisibility = true;
+				});				
+
+				$(document).mousemove(function(e){	//скрываем большую картинку, когда курсор вышел за приделы миниатюры
+					if (flvisibility) {
+						if ((e.pageX > $('#big_img').offset().left+$('#big_img').width()) 
+							|| (e.pageX < $('#big_img').offset().left) 
+							|| (e.pageY > $('#big_img').offset().top+$('#big_img').height()) 
+							|| (e.pageY < $('#big_img').offset().top)) {
+								$('#modal_container').hide();
+								flvisibility = false;						
+						}
+					}
+				});					
+			},
+			error: function() {
+				SetNotImage();
+			}
+		});
+	});
+</script>
+
+{% endblock %}

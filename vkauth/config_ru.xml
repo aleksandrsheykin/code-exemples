@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>VkAuth</name>
+	<displayName><![CDATA[Авторизация ВК]]></displayName>
+	<version><![CDATA[1.0.0]]></version>
+	<description><![CDATA[Авторизация через социальную сеть вконтакте. Чтоб модуль работал, необходимо создать приложение для вашего сайта здесь (https://vk.com/editapp?act=create) и вписать полученные ID приложения и защищенный ключ в настройки модуля]]></description>
+	<author><![CDATA[Lun]]></author>
+	<tab><![CDATA[others]]></tab>
+	<confirmUninstall><![CDATA[Вы уверены, что хотите удалить модуль?]]></confirmUninstall>
+	<is_configurable>1</is_configurable>
+	<need_instance>0</need_instance>
+	<limited_countries></limited_countries>
+</module>
